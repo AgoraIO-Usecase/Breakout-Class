@@ -1,0 +1,5 @@
+﻿  VideoDlg.cpp
+  正在生成代码
+\\mac\home\documents\multichannelproject\samples-special-scenarios\windows\superclass-subchannel-master\openlive\openlive\agoraobject.cpp(316): warning C4715: “CAgoraObject::JoinSecondChannel”: 不是所有的控件路径都返回值
+  已完成代码的生成
+  OpenLive.vcxproj -> \\Mac\Home\Documents\MultiChannelProject\Samples-Special-Scenarios\Windows\SuperClass-SubChannel-master\OpenLive\Release\OpenLive.exe

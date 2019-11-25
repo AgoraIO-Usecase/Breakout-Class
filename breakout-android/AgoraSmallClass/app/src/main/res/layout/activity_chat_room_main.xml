@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:background="@drawable/chat_room_main_bg">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv_small_video"
+            android:layout_width="match_parent"
+            android:layout_height="196dp" />
+
+        <FrameLayout
+            android:id="@+id/fl_big_video"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </LinearLayout>
+
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rv_chat_room_main_message"
+        android:layout_gravity="bottom|left"
+        android:layout_margin="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"/>
+
+    <ImageView
+        android:padding="6dp"
+        android:src="@drawable/btn_main"
+        android:scaleType="centerInside"
+        android:layout_gravity="bottom|right"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="16dp"
+        android:onClick="onStudentChannelJoinClicked"
+        android:layout_width="56dp"
+        android:layout_height="56dp" />
+
+    <ImageView
+        android:padding="6dp"
+        android:src="@drawable/btn_sub"
+        android:scaleType="centerInside"
+        android:layout_gravity="bottom|right"
+        android:onClick="onTeacherChannelJoinClicked"
+        android:layout_marginRight="80dp"
+        android:layout_marginBottom="16dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp" />
+</FrameLayout>
