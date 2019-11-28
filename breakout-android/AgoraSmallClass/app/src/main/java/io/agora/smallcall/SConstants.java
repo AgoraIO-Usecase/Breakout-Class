@@ -12,7 +12,7 @@ public class SConstants {
     public final static int HANDLER_MESSAGE_CONIFG_ENGINE = 0x100005;
     public final static int HANDLER_MESSAGE_REMOTE_VIEW = 0x100006;
 
-    public final static String MEDIA_APP_ID = "aab8b8f5a8cd4469a63042fcfafe7063";
+    public final static String MEDIA_APP_ID = <YOUR_APPID>;
 
     public final static int VIDEO_PROFILE = Constants.VIDEO_PROFILE_480P_8;
 }
