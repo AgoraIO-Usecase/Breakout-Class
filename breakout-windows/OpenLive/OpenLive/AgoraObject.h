@@ -23,7 +23,7 @@ using namespace agora::base;
 #define AG_ENGFLAG_NSON			0x00000200
 #define AG_ENGFLAG_AECON		0x00000400
 
-#define APP_ID				_T("0c0b4b61adf94de1befd7cdd78a50444")
+#define APP_ID				_T("Fill with your app id")
 
 typedef struct _SEI_INFO
 {
