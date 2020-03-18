@@ -176,12 +176,12 @@ public class MediaEngineHandler {
 //        }
 
 
-        @Override
-        public void onFirstRemoteVideoFrame(RtcChannel rtcChannel, int uid, int width, int height, int elapsed) {
-            super.onFirstRemoteVideoFrame(rtcChannel, uid, width, height, elapsed);
-            if (!subHandlers.isEmpty())
-                subHandlers.values().iterator().next().onSubFirstRemoteVideoFrame(uid, width, height, elapsed);
-        }
+//        @Override
+//        public void onFirstRemoteVideoFrame(RtcChannel rtcChannel, int uid, int width, int height, int elapsed) {
+//            super.onFirstRemoteVideoFrame(rtcChannel, uid, width, height, elapsed);
+//            if (!subHandlers.isEmpty())
+//                subHandlers.values().iterator().next().onSubFirstRemoteVideoFrame(uid, width, height, elapsed);
+//        }
 
 //        @Override
 //        public void onFirstRemoteVideoFrame(int uid, int width, int height, int elapsed) {
