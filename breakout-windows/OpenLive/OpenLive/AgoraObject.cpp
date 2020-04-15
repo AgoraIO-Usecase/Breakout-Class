@@ -97,7 +97,7 @@ CAgoraObject *CAgoraObject::GetAgoraObject(LPCTSTR lpVendorKey, BOOL bForceAlter
 	if(m_lpAgoraEngine == NULL)
 		m_lpAgoraEngine = createAgoraRtcEngine();
 
-	// Èç¹ûVendorKeyÎª¿ÕÔòÖ±½Ó·µ»Ø¶ÔÏó
+	// å¦‚æžœVendorKeyä¸ºç©ºåˆ™ç›´æŽ¥è¿”å›žå¯¹è±¡
 	if (lpVendorKey == NULL)
 		return m_lpAgoraObject;
 
@@ -307,7 +307,7 @@ BOOL CAgoraObject::JoinSecondChannel(LPCTSTR lpChannelName,UINT nUID /*= 0*/, LP
 	ChannelMediaOptions options;
 	options.autoSubscribeAudio = true;
 	options.autoSubscribeVideo = true;
-
+	m_channel->setClientRole(CLIENT_ROLE_BROADCASTER);
 	nRet = m_channel->joinChannel(lpDynamicKey, lpStreamInfo, nUID, options);
 
 	if (nRet == 0)
