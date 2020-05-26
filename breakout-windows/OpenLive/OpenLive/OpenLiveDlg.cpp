@@ -134,10 +134,12 @@ BOOL COpenLiveDlg::OnInitDialog()
 	m_ftLink.CreateFont(16, 0, 0, 0, FW_BOLD, FALSE, TRUE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, _T("Arial"));
 	m_ftVer.CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, _T("Arial"));
 
-	m_lpAgoraObject = CAgoraObject::GetAgoraObject(APP_ID, theApp.forceAlternativeNetworkEngine);
+    CString strAppID = CAgoraObject::LoadAppID();
+
+	m_lpAgoraObject = CAgoraObject::GetAgoraObject(strAppID);
 	m_lpRtcEngine = CAgoraObject::GetEngine();
 
-	if (_tcslen(APP_ID) == 0) {
+	if (strAppID.IsEmpty()) {
         MessageBox(_T("Please apply your own App ID to macro APP_ID"), _T("Notice"), MB_ICONINFORMATION);
         PostQuitMessage(0);
     }
@@ -194,7 +196,7 @@ void COpenLiveDlg::InitChildDialog()
 
 	m_dlgEnterChannel.ShowWindow(SW_SHOW);
 	m_lpCurDialog = &m_dlgEnterChannel;
-
+    m_dlgEnterChannel.SetCtrlPos();
 //    m_dlgSetup.SetVideoSolution(15);
 	m_dlgEnterChannel.SetVideoString(m_dlgSetup.GetVideoSolutionDes());
 }
@@ -350,7 +352,9 @@ LRESULT COpenLiveDlg::OnJoinChannel(WPARAM wParam, LPARAM lParam)
 	lpRtcEngine->setupLocalVideo(vc);
 	lpRtcEngine->startPreview();
 
-	lpAgoraObject->JoinChannel(strChannelName);
+    std::string token = lpAgoraObject->GetToken();
+    lpAgoraObject->JoinChannel(strChannelName, 0, token.length() > 0 ? token.c_str() : NULL);
+
 
     lpAgoraObject->SetMsgHandlerWnd(m_dlgVideo.GetSafeHwnd());
     

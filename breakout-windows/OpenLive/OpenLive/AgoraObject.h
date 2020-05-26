@@ -22,9 +22,9 @@ using namespace agora::base;
 #define AG_ENGFLAG_AGCON		0x00000100
 #define AG_ENGFLAG_NSON			0x00000200
 #define AG_ENGFLAG_AECON		0x00000400
-
-#define APP_ID				_T("Fill with your app id")
-
+#include <string>
+#define APP_ID				_T("9624261076ba437c9eac190e88c3403e")
+#define APP_TOKEN		    ""
 typedef struct _SEI_INFO
 {
 	UINT	nUID;
@@ -40,7 +40,7 @@ class CAgoraObject
 {
 public:
 	~CAgoraObject(void);
-
+    static CString LoadAppID();
 	void SetNetworkTestFlag(BOOL bEnable);
 	BOOL GetNetworkTestFlag();
 
@@ -152,13 +152,12 @@ public:
 	void SetSelfResolution(int nWidth, int nHeight);
 	void GetSelfResolution(int *nWidth, int *nHeight);
 
+    std::string GetToken();
 	static IRtcEngine *GetEngine();
 	
 	static CString GetSDKVersion();
 	static CString GetSDKVersionEx();
-	static BOOL EnableWhiteboardVer(BOOL bEnable);
-	static BOOL EnableWhiteboardFeq(BOOL bEnable);
-
+    
 protected:
 	CAgoraObject(void);
 
@@ -203,7 +202,7 @@ private:
 
 	CAtlMap<UINT, SEI_INFO>	m_mapSEIInfo;
 public:
-	static CAgoraObject *GetAgoraObject(LPCTSTR lpVendorKey = NULL, BOOL bForceAlternativeNetworkEngine = FALSE);
+	static CAgoraObject *GetAgoraObject(LPCTSTR lpVendorKey = NULL);
 	static void CloseAgoraObject();
 
 	static CAGEngineEventHandler m_EngineEventHandler;

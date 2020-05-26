@@ -89,44 +89,36 @@ IRtcEngine *CAgoraObject::GetEngine()
 	return m_lpAgoraEngine;
 }
 
-CAgoraObject *CAgoraObject::GetAgoraObject(LPCTSTR lpVendorKey, BOOL bForceAlternativeNetworkEngine)
+CAgoraObject *CAgoraObject::GetAgoraObject(LPCTSTR lpVendorKey)
 {
-	if(m_lpAgoraObject == NULL)
-		m_lpAgoraObject = new CAgoraObject();
+    if (m_lpAgoraObject == NULL)
+        m_lpAgoraObject = new CAgoraObject();
 
-	if(m_lpAgoraEngine == NULL)
-		m_lpAgoraEngine = createAgoraRtcEngine();
+    if (m_lpAgoraEngine == NULL)
+        m_lpAgoraEngine = createAgoraRtcEngine();
 
-	// 如果VendorKey为空则直接返回对象
-	if (lpVendorKey == NULL)
-		return m_lpAgoraObject;
+    if (lpVendorKey == NULL)
+        return m_lpAgoraObject;
 
-	//RtcEngineContext ctx;
+    RtcEngineContext ctx;
 
-	//ctx.eventHandler = &m_EngineEventHandler;
-	//ctx.isMaster = true;
-
-	RtcEngineContext ctxEx;
-	ctxEx.eventHandler = &m_EngineEventHandler;
+    ctx.eventHandler = &m_EngineEventHandler;
 
 #ifdef UNICODE
-	char szVendorKey[128];
+    char szVendorKey[128];
 
-	::WideCharToMultiByte(CP_ACP, 0, lpVendorKey, -1, szVendorKey, 128, NULL, NULL);
-	ctxEx.appId = szVendorKey;
+    ::WideCharToMultiByte(CP_ACP, 0, lpVendorKey, -1, szVendorKey, 128, NULL, NULL);
+    ctx.appId = szVendorKey;
 #else
-	ctxEx.appId = lpVendorKey;
+    ctx.appId = lpVendorKey;
 #endif
-	IRtcEngine* rtcEngine = (IRtcEngine*)m_lpAgoraEngine;
-	
-	rtcEngine->initialize(ctxEx);
 
-	if (lpVendorKey != NULL)
-		m_strAppID = lpVendorKey;
+    m_lpAgoraEngine->initialize(ctx);
+    if (lpVendorKey != NULL)
+        m_strAppID = lpVendorKey;
 
-	return m_lpAgoraObject;
+    return m_lpAgoraObject;
 }
-
 void CAgoraObject::CloseAgoraObject()
 {
 	if(m_lpAgoraEngine != NULL)
@@ -383,34 +375,62 @@ BOOL CAgoraObject::IsVideoEnabled()
 	return m_bVideoEnable;
 }
 
+
 BOOL CAgoraObject::EnableScreenCapture(HWND hWnd, int nCapFPS, LPCRECT lpCapRect, BOOL bEnable, int nBitrate)
 {
-	ASSERT(m_lpAgoraEngine != NULL);
+    ASSERT(m_lpAgoraEngine != NULL);
 
-	int ret = 0;
-	RtcEngineParameters rep(*m_lpAgoraEngine);
+    int ret = 0;
+    RtcEngineParameters rep(*m_lpAgoraEngine);
 
-	Rect rcCap;
+    agora::rtc::Rectangle rcCap;
+    ScreenCaptureParameters capParam;
+    capParam.bitrate = nBitrate;
+    capParam.frameRate = nCapFPS;
 
-	if (bEnable) {
-		if (lpCapRect == NULL)
-			ret = m_lpAgoraEngine->startScreenCapture(hWnd, nCapFPS, NULL,nBitrate);
-		else {
-			rcCap.left = lpCapRect->left;
-			rcCap.right = lpCapRect->right;
-			rcCap.top = lpCapRect->top;
-			rcCap.bottom = lpCapRect->bottom;
+    if (bEnable) {
+        if (lpCapRect == NULL) {
+            RECT rc;
+            if (hWnd) {
+                ::GetWindowRect(hWnd, &rc);
+                capParam.dimensions.width = rc.right - rc.left;
+                capParam.dimensions.height = rc.bottom - rc.top;
+                ret = m_lpAgoraEngine->startScreenCaptureByWindowId(hWnd, rcCap, capParam);
+            }
+            else {
+                GetWindowRect(GetDesktopWindow(), &rc);
+                agora::rtc::Rectangle screenRegion = { rc.left, rc.right, rc.right - rc.left, rc.bottom - rc.top };
+                capParam.dimensions.width = rc.right - rc.left;
+                capParam.dimensions.height = rc.bottom - rc.top;
+                ret = m_lpAgoraEngine->startScreenCaptureByScreenRect(screenRegion, rcCap, capParam);
+            }
+            //startScreenCapture(hWnd, nCapFPS, NULL, nBitrate);
+        }
+        else {
+            capParam.dimensions.width = lpCapRect->right - lpCapRect->left;
+            capParam.dimensions.height = lpCapRect->bottom - lpCapRect->top;
 
-			ret = m_lpAgoraEngine->startScreenCapture(hWnd, nCapFPS, &rcCap,nBitrate);
-		}
-	}
-	else
-		ret = m_lpAgoraEngine->stopScreenCapture();
+            rcCap.x = lpCapRect->left;
+            rcCap.y = lpCapRect->top;
+            rcCap.width = lpCapRect->right - lpCapRect->left;
+            rcCap.height = lpCapRect->bottom - lpCapRect->top;
 
-	if (ret == 0)
-		m_bScreenCapture = bEnable;
+            if (hWnd)
+                ret = m_lpAgoraEngine->startScreenCaptureByWindowId(hWnd, rcCap, capParam);
+            else {
 
-	return ret == 0 ? TRUE : FALSE;
+                agora::rtc::Rectangle screenRegion = rcCap;
+                ret = m_lpAgoraEngine->startScreenCaptureByScreenRect(screenRegion, rcCap, capParam);
+            }
+        }
+    }
+    else
+        ret = m_lpAgoraEngine->stopScreenCapture();
+
+    if (ret == 0)
+        m_bScreenCapture = bEnable;
+
+    return ret == 0 ? TRUE : FALSE;
 }
 
 BOOL CAgoraObject::IsScreenCaptureEnabled()
@@ -903,48 +923,60 @@ void CAgoraObject::GetSelfResolution(int *nWidth, int *nHeight)
 	*nHeight = m_nCanvasHeight;
 }
 
-BOOL CAgoraObject::EnableWhiteboardVer(BOOL bEnable)
+CString CAgoraObject::LoadAppID()
 {
-	// HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_BROWSER_EMULATION
-	HKEY hKey = NULL;
+    CString strAppID(APP_ID);
+    if (!strAppID.IsEmpty())
+        return strAppID;
+    TCHAR szFilePath[MAX_PATH];
+    ::GetModuleFileName(NULL, szFilePath, MAX_PATH);
+    LPTSTR lpLastSlash = _tcsrchr(szFilePath, _T('\\'));
 
-	LSTATUS lStatus = ::RegCreateKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\Wow6432Node\\Microsoft\\Internet Explorer\\MAIN\\FeatureControl\\FEATURE_BROWSER_EMULATION"), 0, REG_OPTION_NON_VOLATILE
-		, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
+    if (lpLastSlash == NULL)
+        return strAppID;
 
-	if (lStatus != ERROR_SUCCESS)
-		return FALSE;
+    SIZE_T nNameLen = MAX_PATH - (lpLastSlash - szFilePath + 1);
+    _tcscpy_s(lpLastSlash + 1, nNameLen, _T("AppID.ini"));
 
-	DWORD dwIEVer = 11001;
+    if (!PathFileExists(szFilePath)) {
+        HANDLE handle = CreateFile(szFilePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_NEW, 0, NULL);
+        CloseHandle(handle);
+    }
 
-	if (bEnable)
-		lStatus = ::RegSetValueEx(hKey, _T("AgoraVideoCall.exe"), 0, REG_DWORD, (const BYTE*)&dwIEVer, sizeof(DWORD));
-	else
-		lStatus = ::RegDeleteKeyValue(hKey, NULL, _T("AgoraVideoCall.exe"));
+    TCHAR szAppid[MAX_PATH] = { 0 };
+    ::GetPrivateProfileString(_T("AppID"), _T("AppID"), NULL, szAppid, MAX_PATH, szFilePath);
+    if (_tcslen(szAppid) == 0) {
+        ::WritePrivateProfileString(_T("AppID"), _T("AppID"), _T(""), szFilePath);
+        ::ShellExecute(NULL, _T("open"), szFilePath, NULL, NULL, SW_MAXIMIZE);
+    }
 
-	::RegCloseKey(hKey);
+    strAppID = szAppid;
 
-	return lStatus == ERROR_SUCCESS ? TRUE : FALSE;
+    return strAppID;
 }
 
-BOOL CAgoraObject::EnableWhiteboardFeq(BOOL bEnable)
+
+std::string CAgoraObject::GetToken()
 {
-	// HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_BROWSER_EMULATION
-	HKEY hKey = NULL;
-	
-	LSTATUS lStatus = ::RegCreateKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\Wow6432Node\\Microsoft\\Internet Explorer\\MAIN\\FeatureControl\\FEATURE_MANAGE_SCRIPT_CIRCULAR_REFS"), 0, REG_OPTION_NON_VOLATILE
-		, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
+    std::string token(APP_TOKEN);
+    if (!token.empty())
+        return token;
 
-	if (lStatus != ERROR_SUCCESS)
-		return FALSE;
+    TCHAR szFilePath[MAX_PATH];
+    ::GetModuleFileName(NULL, szFilePath, MAX_PATH);
+    LPTSTR lpLastSlash = _tcsrchr(szFilePath, _T('\\'));
 
-	DWORD dwValue = 1;
+    if (lpLastSlash == NULL)
+        return token;
 
-	if (bEnable)
-		lStatus = ::RegSetValueEx(hKey, _T("AgoraVideoCall.exe"), 0, REG_DWORD, (const BYTE*)&dwValue, sizeof(DWORD));
-	else
-		lStatus = ::RegDeleteKeyValue(hKey, NULL, _T("AgoraVideoCall.exe"));
+    SIZE_T nNameLen = MAX_PATH - (lpLastSlash - szFilePath + 1);
+    _tcscpy_s(lpLastSlash + 1, nNameLen, _T("AppID.ini"));
 
-	::RegCloseKey(hKey);
 
-	return lStatus == ERROR_SUCCESS ? TRUE : FALSE;
+    TCHAR szToken[MAX_PATH] = { 0 };
+    char temp[MAX_PATH] = { 0 };
+    ::GetPrivateProfileString(_T("AppID"), _T("AppToken"), NULL, szToken, MAX_PATH, szFilePath);
+    ::WideCharToMultiByte(CP_UTF8, 0, szToken, -1, temp, 128, NULL, NULL);
+
+    return temp;
 }
